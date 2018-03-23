@@ -11,7 +11,6 @@ from multiprocessing import Queue, Process, cpu_count
 from joblib import Parallel, delayed
 from collections import Iterable
 from time import time
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Some dark arts:
@@ -151,7 +150,7 @@ class LineChartPlot:
 
 
 # Core parts: cost, gradient, descent, error, predict
-def cost(y: np.matrix, X: np.matrix, theta: np.matrix)->float:
+def cost(y: np.matrix, X: np.matrix, theta: np.matrix, λ: float)->float:
     """
     Calculates cost function.
     It's not safe to use the defaut np.log to calculate cost function.
@@ -165,10 +164,12 @@ def cost(y: np.matrix, X: np.matrix, theta: np.matrix)->float:
     m = y.shape[0]
     hypo = sigmoid(X @ theta)
     # Note that we need a number only. So we retrived value using [0, 0]
-    return (-1./m * (y.T @ np.log(safelog(hypo)) + (1.-y).T @ np.log(safelog(1. - hypo))))[0, 0]
+    # The following line neet to add regularization part to avoid overfitting
+    c = (-1.0/m * (y.T @ np.log(safelog(hypo)) + (1.0 - y).T @ np.log(safelog(1.0 - hypo))))[0, 0]
+    return c + λ / (2 * m) * np.sum(np.square(theta[1:])) # Bug can show up if len(theta) < 2
 
 
-def gradient(y: np.matrix, X: np.matrix, theta: np.matrix)->np.matrix:
+def gradient(y: np.matrix, X: np.matrix, theta: np.matrix, λ: float)->np.matrix:
     """
     Calculates gradient.
     Params:
@@ -180,8 +181,10 @@ def gradient(y: np.matrix, X: np.matrix, theta: np.matrix)->np.matrix:
     """
     m = y.shape[0]
     hypo = sigmoid(X @ theta)
-    # Here though, unlike line 97, we must preserve the structure of the gradient.
-    return 1./m * (X.T @ (hypo - y))
+    L = np.matrix(np.identity(X.shape[1]))
+    L[0,0] = 0
+    # Here though, unlike line 169, we must preserve the structure of the gradient.
+    return 1.0/m * (X.T @ (hypo - y) + λ * L @ theta)
 
 
 # Gradient descent algorithm in multiprocessing: parallel gradient calculation.
@@ -213,7 +216,7 @@ def para_gradient(y: np.matrix, X: np.matrix, theta: np.matrix)->float:
         b.join()
     while not q.empty():
         gradients.append(q.get())
-    return 1./m * sum(gradients)
+    return 1.0/m * sum(gradients)
 
 
 def cthgrad(y: np.matrix, X: np.matrix, theta: np.matrix, queue: Queue):
@@ -233,7 +236,7 @@ def cthgrad(y: np.matrix, X: np.matrix, theta: np.matrix, queue: Queue):
     queue.put(X.T @ (hypo - y))
 
 
-def descent(y: np.matrix, X: np.matrix, alpha: float, tol: float, maxiter=np.inf)->np.matrix:
+def descent(y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: float, maxiter=np.inf)->np.matrix:
     """
     Vectorized implementation of radient descent algorithm.
     Stop condition is when the theta barely changes.
@@ -249,13 +252,13 @@ def descent(y: np.matrix, X: np.matrix, alpha: float, tol: float, maxiter=np.inf
     i = 1
     temp = np.zeros((X.shape[1], 1))
     theta = np.ones((X.shape[1], 1))
-    loss = cost(y, X, theta)
+    loss = cost(y, X, theta, λ)
     while not converged(temp, theta, tol) and i < maxiter:
         # print("Iteration {0} | cost: {1: .6f}".format(i, loss))
         temp = theta
-        theta = theta - alpha * gradient(y, X, theta)
+        theta = theta - alpha * gradient(y, X, theta, λ)
         # theta = theta - alpha * para_gradient(y, X, theta)
-        loss = cost(y, X, theta)
+        loss = cost(y, X, theta, λ)
         i += 1
     return theta
 
@@ -288,7 +291,7 @@ def predict(theta: np.matrix, X_input: np.matrix)->np.matrix:
 
 
 # Cross Validation Strategies:
-def nfold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float
+def nfold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: float
          )->(float, (np.matrix, float)):
     """
     N-fold cross validation.
@@ -306,7 +309,7 @@ def nfold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float
     for i in range(n):
         print("N-Fold Validation -> {}:".format(i))
         y_train, X_train, y_test, X_test = cv_divide(y, X, n, i)
-        theta = descent(y_train, X_train, alpha, tol)
+        theta = descent(y_train, X_train, alpha, tol, λ)
         e = error(theta, y_test, X_test)
         errors.append((theta, e))
         print("{0} -> theta: {1} | error: {2:.6f}".format(i, theta, e))
@@ -314,7 +317,7 @@ def nfold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float
 
 
 # Parallel version of n-fold:
-def multifold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float
+def multifold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: float
              )->(float, (np.matrix, float)):
     """
     Multiprocessing N-fold cross validation.
@@ -333,7 +336,7 @@ def multifold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float
     errors = []
     for k in range(n):
         print("N-Fold Validation -> {}:".format(k))
-        p = Process(target=kthfold, args=(k, n, y, X, q, alpha, tol))
+        p = Process(target=kthfold, args=(k, n, y, X, q, alpha, tol, λ))
         trains.append(p)
         p.start()
     for t in trains:
@@ -343,7 +346,7 @@ def multifold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float
     return average(errors), min(errors,key=lambda x: x[1])
     
 
-def kthfold(i: int, n: int, y: np.matrix, X: np.matrix, queue: Queue, alpha: float, tol: float):
+def kthfold(i: int, n: int, y: np.matrix, X: np.matrix, queue: Queue, alpha: float, tol: float, λ: float):
     """
     The kth partition helper function for N-fold cross validation.
     Params:
@@ -356,14 +359,14 @@ def kthfold(i: int, n: int, y: np.matrix, X: np.matrix, queue: Queue, alpha: flo
           tol: Tolerance of minimum update
     """
     y_train, X_train, y_test, X_test = cv_divide(y, X, n, i)
-    theta = descent(y_train, X_train, alpha, tol)
+    theta = descent(y_train, X_train, alpha, tol, λ)
     e = error(theta, y_test, X_test)
     print("{0} -> theta: {1} | error: {2:.6f}".format(i, flatten(theta.tolist()), e))
     queue.put((theta, e))
 
 
 # Auto tuning for logistic regression:
-def hypertune(n: int, alpha: float, tol: float):
+def hypertune(n: int, alpha: float, tol: float, λ: float):
     """
     Hyperparameter optimization.
     Criteria for optimization is average prediction accuracy and/or cost.
@@ -382,7 +385,7 @@ def hypertune(n: int, alpha: float, tol: float):
 
 
 # Callable kich-starting functions:
-def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float
+def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float, λ: float
                 )->(np.matrix, float):
     """
     Simple training and testing the model using 2-8 partition.
@@ -395,7 +398,7 @@ def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float
     """
     start = time()
     y_train, X_train, y_test, X_test = ttsplit(int(y.shape[0]*p), y, X)
-    theta = descent(y_train, X_train, alpha, tol)
+    theta = descent(y_train, X_train, alpha, tol, λ)
     e = error(theta, y_test, X_test)
     end = time()
     print("Theta    : {}".format(flatten(theta.tolist())))
@@ -405,7 +408,7 @@ def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float
     return e, [theta]
 
 
-def nfold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float
+def nfold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float, λ: float
                )->(float, (np.matrix, float)):
     """
     Sequencial training process of n-fold cross validation.
@@ -418,7 +421,7 @@ def nfold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float
           tol: Tolerance of minimum update
     """
     start = time()
-    aveg_err, best_theta = nfold(5, y, X, alpha, tol)
+    aveg_err, best_theta = nfold(5, y, X, alpha, tol, λ)
     print("Average accuracy: {:.6f}".format(1 - aveg_err))
     print("Highest accuracy: {:.6f}".format(1 - best_theta[1]))
     print("Theata: {}".format(flatten(best_theta[0].tolist())))
@@ -427,7 +430,7 @@ def nfold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float
     return aveg_err, best_theta
 
 
-def multifold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float
+def multifold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float, λ: float
                    )->(float, (np.matrix, float)):
     """
     Parallelized training process of n-fold cross validation.
@@ -440,7 +443,7 @@ def multifold_train(y: np.matrix, X: np.matrix, n: int, alpha: float, tol: float
           tol: Tolerance of minimum update
     """
     start = time()
-    aveg_err, best_theta = multifold(n, y, X, alpha, tol) # 7 is the number
+    aveg_err, best_theta = multifold(n, y, X, alpha, tol, λ) # 7 is the number
     print("Average accuracy: {:.6f}".format(1 - aveg_err))
     print("Highest accuracy: {:.6f}".format(1 - best_theta[1]))
     print("Theta: {}".format(flatten(best_theta[0].tolist())))
@@ -455,13 +458,13 @@ if __name__ == "__main__":
     y, X = traincsv2matrix("diabetes_dataset.csv")
 
     # Simple training and testing the model:
-    """avge, best_theta = simple_split(y, X, 0.8, 0.00001, 0.0001)"""
+    """avge, best_theta = simple_split(y, X, 0.8, 0.00001, 0.0001, 1)"""
 
     # Using N-fold validation strategy:
-    """avge, best_theta = nfold_train(y, X, 7, 0.0001, 0.0001)"""
+    """avge, best_theta = nfold_train(y, X, 7, 0.0001, 0.0001, 1)"""
 
     # Multiprocessing N-fold
-    avge, best_theta = multifold_train(y, X, 7, 0.0001, 0.0001)
+    avge, best_theta = multifold_train(y, X, 7, 0.0001, 0.0001, 1000)
 
     # Predict y on non-labeled dataset:
     theta = best_theta[0]
