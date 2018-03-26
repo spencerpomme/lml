@@ -11,11 +11,13 @@ from multiprocessing import Queue, Process, cpu_count
 from joblib import Parallel, delayed
 from collections import Iterable
 from time import time
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Some dark arts:
 onezero = np.vectorize(lambda x: 0 if x < 0.5 else 1)
 safelog = np.vectorize(lambda x: x if x != 0 else 0.00000000001)
+# The following lambda is just for expanding any nested iterable structure:
 flatten = lambda nested: list(filter(lambda _: _, (lambda _: ((yield from flatten(e)) if isinstance(e, Iterable) else (yield round(e, 6)) for e in _))(nested)))
 sigmoid = lambda z: 1 / (1 + np.exp(-1 * z))
 ttsplit = lambda par, y, X: (y[:par], X[:par], y[par:], X[par:])
@@ -166,12 +168,13 @@ def cost(y: np.matrix, X: np.matrix, theta: np.matrix, λ: float)->float:
     # Note that we need a number only. So we retrived value using [0, 0]
     # The following line neet to add regularization part to avoid overfitting
     c = (-1.0/m * (y.T @ np.log(safelog(hypo)) + (1.0 - y).T @ np.log(safelog(1.0 - hypo))))[0, 0]
+    # L2 regularization:
     return c + λ / (2 * m) * np.sum(np.square(theta[1:])) # Bug can show up if len(theta) < 2
 
 
 def gradient(y: np.matrix, X: np.matrix, theta: np.matrix, λ: float)->np.matrix:
     """
-    Calculates gradient.
+    Calculates gradient. Gradient measures how weights affects cost.
     Params:
             y: Column vector of y values
             X: Matrix of x values
@@ -290,7 +293,7 @@ def predict(theta: np.matrix, X_input: np.matrix)->np.matrix:
     return onezero(X_input @ theta)
 
 
-# Cross Validation Strategies:
+# Cross Validation:
 def nfold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: float
          )->(float, (np.matrix, float)):
     """
@@ -320,7 +323,7 @@ def nfold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: floa
 def multifold(n: int, y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: float
              )->(float, (np.matrix, float)):
     """
-    Multiprocessing N-fold cross validation.
+    Multiprocessing N-fold cross validation. It calls function kthfold in parallel.
     Params:
             n: Number of batches 
             y: Column vector of y values
@@ -384,7 +387,7 @@ def hypertune(n: int, alpha: float, tol: float, λ: float):
     pass
 
 
-# Callable kich-starting functions:
+# Callable kick-starting functions:
 def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float, λ: float
                 )->(np.matrix, float):
     """
@@ -404,7 +407,7 @@ def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float,
     print("Theta    : {}".format(flatten(theta.tolist())))
     print("Accuracy : {0:.6f}".format(1 - e))
     print("Total elapsed time: {}".format(end - start))
-    # Just to compatible with other two fucntion returning format:
+    # Just to stay compatible with other two fucntion returning format:
     return e, [theta]
 
 
@@ -464,7 +467,7 @@ if __name__ == "__main__":
     """avge, best_theta = nfold_train(y, X, 7, 0.0001, 0.0001, 1)"""
 
     # Multiprocessing N-fold
-    avge, best_theta = multifold_train(y, X, 7, 0.0001, 0.0001, 1000)
+    avge, best_theta = multifold_train(y, X, 7, 0.0001, 0.0001, 50)
 
     # Predict y on non-labeled dataset:
     theta = best_theta[0]
@@ -473,10 +476,10 @@ if __name__ == "__main__":
     predict2csv(predict(theta, np.matrix(np.genfromtxt("test_samples.csv", delimiter=','))))
 
     # Result of sklearn model:
-    """from sklearn import linear_model
+    from sklearn import linear_model
     logreg = linear_model.LogisticRegression(tol=0.0001, max_iter=10)
     r = logreg.fit(X, np.ravel(y))
     s = logreg.score(X, np.ravel(y))
     print(r.coef_)
-    print(s)"""
+    print(s)
     
