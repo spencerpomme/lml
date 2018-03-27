@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/anaconda/envs/tensorflow/bin/python
 # -*- coding: utf-8 -*-
 """
 Created on Mon Feb 24 15:30:48 2018
@@ -11,7 +11,6 @@ from multiprocessing import Queue, Process, cpu_count
 from joblib import Parallel, delayed
 from collections import Iterable
 from time import time
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Some dark arts:
@@ -109,47 +108,6 @@ def batch_devide(y: np.matrix, X: np.matrix, n: int, index: int)->np.matrix:
         mini_X = X[(batch_size * index): (batch_size * (index + 1))]
     return mini_y, mini_X
     
-
-# Ploting class
-class LineChartPlot:
-    """
-    Plotting class of (iteration, cost) data points in line chart.
-    Only can be used when dataset is relatively small, otherwise memory can overflow.
-    """
-    def __init__(self, hyper: tuple):
-        """
-        Initialize the plotting instance
-        Params:
-            hyper: a tuple of hyper parametors
-        """
-        self.costs = []
-        self.iters = []
-        self.hyper = hyper
-
-    def write_plot_data(self, iteration: int, cost: float):
-        """
-        Write iteration-cost pair to a temp file, which is to be used
-        to plot training process by cost_plot function.
-        Params:
-            iteration: gradient descent iteration
-                cost: cost per iteration
-        """
-        self.costs.append(cost)
-        self.iters.append(iteration)
-        
-    def plot(self):
-        """
-        Plot the loss variance with the iteration.
-        Params:
-            data: The string location of the data points.
-        """
-        plt.plot(self.iters, self.costs)
-        plt.ylabel("Cost")
-        plt.xlabel("Iteration")
-        plt.axis([0, 6000, 0.1, 17])
-        plt.title("alpha: {0:} tolerence: {1:}".format(*self.hyper))
-        plt.show()
-
 
 # Core parts: cost, gradient, descent, error, predict
 def cost(y: np.matrix, X: np.matrix, theta: np.matrix, λ: float)->float:
@@ -257,7 +215,8 @@ def descent(y: np.matrix, X: np.matrix, alpha: float, tol: float, λ: float, max
     theta = np.ones((X.shape[1], 1))
     loss = cost(y, X, theta, λ)
     while not converged(temp, theta, tol) and i < maxiter:
-        # print("Iteration {0} | cost: {1: .6f}".format(i, loss))
+        if i // 100 == 0:
+            print("Iteration {0} | cost: {1: .6f}".format(i, loss))
         temp = theta
         theta = theta - alpha * gradient(y, X, theta, λ)
         # theta = theta - alpha * para_gradient(y, X, theta)
