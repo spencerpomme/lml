@@ -8,7 +8,6 @@ env = tensorflow | Need to set to this virtual env before run the code.
 """
 
 from multiprocessing import Queue, Process, cpu_count
-from joblib import Parallel, delayed
 from collections import Iterable
 from time import time
 import numpy as np
