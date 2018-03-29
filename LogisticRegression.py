@@ -4,7 +4,6 @@
 Created on Mon Feb 24 15:30:48 2018
 
 @author: ZHANG Pingcheng
-env = tensorflow | Need to set to this virtual env before run the code.
 """
 
 from multiprocessing import Queue, Process, cpu_count
@@ -12,10 +11,9 @@ from collections import Iterable
 from time import time
 import numpy as np
 
-# Some dark arts:
+
 onezero = np.vectorize(lambda x: 0 if x < 0.5 else 1)
 safelog = np.vectorize(lambda x: x if x != 0 else 0.00000000001)
-# The following lambda is just for expanding any nested iterable structure:
 flatten = lambda nested: list(filter(lambda _: _, (lambda _: ((yield from flatten(e)) if isinstance(e, Iterable) else (yield round(e, 6)) for e in _))(nested)))
 sigmoid = lambda z: 1 / (1 + np.exp(-1 * z))
 ttsplit = lambda par, y, X: (y[:par], X[:par], y[par:], X[par:])
@@ -326,25 +324,6 @@ def kthfold(i: int, n: int, y: np.matrix, X: np.matrix, queue: Queue, alpha: flo
     queue.put((theta, e))
 
 
-# Auto tuning for logistic regression:
-def hypertune(n: int, alpha: float, tol: float, λ: float):
-    """
-    Hyperparameter optimization.
-    Criteria for optimization is average prediction accuracy and/or cost.
-    The idea is that firstly generate a dataset of tuning parameters and
-    corresponding cost, then using that dataset to training a model.
-    Using the following 3 functions to be objective function.
-    Params:
-            n: batch number.
-          tol: tolerance
-        alpha: learning rate.
-    Return:
-        (n, tol, alpha) that gives optimal training result.
-    """
-    # TODO
-    pass
-
-
 # Callable kick-starting functions:
 def simple_split(y: np.matrix, X: np.matrix, p: float, alpha: float, tol: float, λ: float
                 )->(np.matrix, float):
@@ -433,11 +412,3 @@ if __name__ == "__main__":
     print("Accuracy using best theta: {:.6f}".format(1 - e))
     predict2csv(predict(theta, np.matrix(np.genfromtxt("test_samples.csv", delimiter=','))))
 
-    # Result of sklearn model:
-    from sklearn import linear_model
-    logreg = linear_model.LogisticRegression(tol=0.0001, max_iter=10)
-    r = logreg.fit(X, np.ravel(y))
-    s = logreg.score(X, np.ravel(y))
-    print(r.coef_)
-    print(s)
-    

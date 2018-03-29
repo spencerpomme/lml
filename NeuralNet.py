@@ -10,6 +10,9 @@ Created on Wed Mar 28 20:07:33 2018
 
 import numpy as np
 
+# Activation functions
+sigmoid = lambda z: 1 / (1 + np.exp(-1 * z))
+
 
 class MuptilayerPerceptron:
     def __init__(self, layers: list):
