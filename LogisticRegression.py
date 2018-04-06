@@ -14,7 +14,6 @@ import numpy as np
 
 onezero = np.vectorize(lambda x: 0 if x < 0.5 else 1)
 safelog = np.vectorize(lambda x: x if x != 0 else 0.00000000001)
-flatten = lambda nested: list(filter(lambda _: _, (lambda _: ((yield from flatten(e)) if isinstance(e, Iterable) else (yield round(e, 6)) for e in _))(nested)))
 sigmoid = lambda z: 1 / (1 + np.exp(-1 * z))
 ttsplit = lambda par, y, X: (y[:par], X[:par], y[par:], X[par:])
 average = lambda ls: sum([s[1] for s in ls]) / len(ls)
@@ -22,6 +21,10 @@ converged = lambda temp, theta, tol: abs(np.sum(temp - theta)) <= tol
 
 
 # Helper function:
+def flatten(nested):
+    return list(filter(lambda _: _, (lambda _: ((yield from flatten(
+    e)) if isinstance(e, Iterable) else (yield round(e, 6)) for e in _))(nested)))
+
 def traincsv2matrix(file: str)->(np.matrix, np.matrix):
     """
     Retrieve training data from csv file.
