@@ -24,6 +24,10 @@ converged = lambda temp, theta, tol: abs(np.sum(temp - theta)) <= tol
 
 
 # Helper function:
+def flatten(nested):
+    return list(filter(lambda _: _, (lambda _: ((yield from flatten(
+    e)) if isinstance(e, Iterable) else (yield round(e, 6)) for e in _))(nested)))
+
 def traincsv2matrix(file: str)->(np.matrix, np.matrix):
     """
     Retrieve training data from csv file.
