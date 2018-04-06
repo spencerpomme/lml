@@ -25,10 +25,17 @@ num_classes = y_test.shape[1]
 
 # create model
 model = Sequential()
-model.add(Convolution2D(32, 3, 3, input_shape=(3, 32,32), activation='relu', border_mode='same'))
+model.add(
+    Convolution2D(
+        32,
+        3,
+        3,
+        input_shape=(3, 32, 32),
+        activation='relu',
+        border_mode='same'))
 model.add(Dropout(0.2))
 model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same'))
-model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Convolution2D(64, 3, 3, activation='relu', border_mode='same'))
 model.add(Dropout(0.2))
 model.add(Convolution2D(64, 3, 3, activation='relu', border_mode='same'))
@@ -50,12 +57,18 @@ epochs = 20
 learning_rate = 0.02
 decay = learning_rate / epochs
 sgd = SGD(lr=learning_rate, momentum=0.9, decay=decay, nesterov=False)
-model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+model.compile(
+    loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 print(model.summary())
 
 # fit model
-model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=epochs, batch_size=64)
+model.fit(
+    X_train,
+    y_train,
+    validation_data=(X_test, y_test),
+    nb_epoch=epochs,
+    batch_size=64)
 
 # evaluate model
 scores = model.evaluate(X_test, y_test, verbose=1)
-print("Accuracy: %.2f%%" % (scores[1]*100))
+print("Accuracy: %.2f%%" % (scores[1] * 100))

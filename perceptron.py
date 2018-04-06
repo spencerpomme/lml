@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random as rd
 
+
 # Using the randomly generated parameter to define the real target function
 def target(x, y):
     # print(np.dot(w_truth, [1, x, y]))
@@ -21,6 +22,7 @@ def target(x, y):
     else:
         return -1
     # eturn 1 if np.dot(w_truth, np.transpose([1,x,y])) > 0 else -1
+
 
 # Generate n random points according to the target function
 def gen_pts(n: int):
@@ -47,7 +49,7 @@ def perceptron(Input, label, w, miss):
         # print('np.dot(w, x):', np.dot(w, x), 'label[i]: ', label[i])
         if np.dot(w, x) * label[i] < 0:
             miss[i] = 1
-            w = list(np.add(w, np.multiply(x, label[i]))) # add up to vector
+            w = list(np.add(w, np.multiply(x, label[i])))  # add up to vector
             track += 1
         else:
             miss[i] = 0
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     B = 1
     C = 1
     w_truth = [C, A, B]
-    
+
     # The sample set {xs -> ys}
     xs = []
     ys = []
@@ -92,25 +94,25 @@ if __name__ == "__main__":
         # print(i)
         xs.append([i[0], i[1]])
         ys.append(i[2])
-        plt.plot(i[0], i[1], *['g+' if i[2]>0 else 'b_'])
-    
+        plt.plot(i[0], i[1], *['g+' if i[2] > 0 else 'b_'])
+
     plt.plot([-1, 0], [0, -1], 'r--', linewidth=3)
-    
-    w_hypoth = train(perceptron,
-                     xs,
-                     ys,
-                     [rd.randint(-10,10),
-                      rd.randint(-10,10),
-                      rd.randint(-10,10)
-                      ]
-                     )
+
+    w_hypoth = train(
+        perceptron, xs, ys,
+        [rd.randint(-10, 10),
+         rd.randint(-10, 10),
+         rd.randint(-10, 10)])
 
     print('w_truth -> ', w_truth)
     print('w_hypoth -> ', w_hypoth)
     print('track(or the actual iteration): ', track)
-    
+
     # plot the true line
-    plt.plot([0, -w_hypoth[0]/w_hypoth[2]], [-w_hypoth[0]/w_hypoth[1], 0],
-             'y-', linewidth=2, label="hypothesis")
-    
+    plt.plot(
+        [0, -w_hypoth[0] / w_hypoth[2]], [-w_hypoth[0] / w_hypoth[1], 0],
+        'y-',
+        linewidth=2,
+        label="hypothesis")
+
     plt.show()

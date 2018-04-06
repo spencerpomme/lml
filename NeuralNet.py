@@ -10,8 +10,10 @@ Created on Wed Mar 28 20:07:33 2018
 
 import numpy as np
 
+
 # Activation functions
-def sigmoid(z): return 1 / (1 + np.exp(-1 * z))
+def sigmoid(z):
+    return 1 / (1 + np.exp(-1 * z))
 
 
 class MuptilayerPerceptron:
@@ -64,8 +66,7 @@ class MuptilayerPerceptron:
         self.grad_b,\
         self.grad_h = self._initialize()
 
-
-    def _initialize(self)->(list, list, list, list, list, list):
+    def _initialize(self) -> (list, list, list, list, list, list):
         """
         Initialize the shape of neural network.
         Return:
@@ -76,33 +77,90 @@ class MuptilayerPerceptron:
                     [batch_size x feature_num]
             And initial gradients of them respectively.
         """
-        thetas = list(map(np.matrix,
-                 list(map(np.ones,
-                 list(zip(self.layers[1:], self.layers[:-1]))))))
-        biases = list(map(np.matrix,
-                 list(map(np.ones,
-                 list(zip([self.batch_size] * (len(self.layers) - 1),
-                          self.layers[1:]))))))
-        hidden = list(map(np.matrix,
-                 list(map(np.ones,
-                 list(zip([self.batch_size] * (len(self.layers) - 1),
-                          self.layers[1:]))))))
-        
-        grad_t = list(map(np.matrix,
-                 list(map(np.ones,
-                 list(zip(self.layers[1:], self.layers[:-1]))))))
-        grad_b = list(map(np.matrix,
-                 list(map(np.ones,
-                 list(zip([self.batch_size] * (len(self.layers) - 1),
-                          self.layers[1:]))))))
-        grad_h = list(map(np.matrix,
-                 list(map(np.ones,
-                 list(zip([self.batch_size] * (len(self.layers) - 1),
-                          self.layers[1:]))))))
+        thetas = list(
+            map(
+                np.matrix,
+                list(
+                    map(np.ones, list(zip(self.layers[1:], self.layers[:-1])))
+                )
+            )
+        )
+        biases = list(
+            map(
+                np.matrix,
+                list(
+                    map(
+                        np.ones,
+                        list(
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        hidden = list(
+            map(
+                np.matrix,
+                list(
+                    map(
+                        np.ones,
+                        list(
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        grad_t = list(
+            map(
+                np.matrix,
+                list(
+                    map(np.ones, list(zip(self.layers[1:], self.layers[:-1])))
+                )
+            )
+        )
+        grad_b = list(
+            map(
+                np.matrix,
+                list(
+                    map(
+                        np.ones,
+                        list(
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        grad_h = list(
+            map(
+                np.matrix,
+                list(
+                    map(
+                        np.ones,
+                        list(
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
         return thetas, biases, hidden, grad_t, grad_b, grad_h
 
-
-    def forwardprop(self, X: np.matrix, activation)->np.matrix:
+    def forwardprop(self, X: np.matrix, activation) -> np.matrix:
         """
         Vectorized forward propagation phase of neural network.
         Updates the nodes' value of layers.
@@ -114,10 +172,11 @@ class MuptilayerPerceptron:
         """
         self.hidden[0] = activation(X @ self.thetas[0].T + self.biases[0])
         for i in range(1, self.layer_num):
-            self.hidden[i] = activation(self.hidden[i-1] @ self.thetas[i].T + self.biases[i])
+            self.hidden[i] = activation(
+                self.hidden[i - 1] @ self.thetas[i].T + self.biases[i]
+            )
         output = self.hidden[-1]
         return output
-
 
     def backprop(self, X: np.matrix, y: np.matrix):
         """
@@ -133,11 +192,10 @@ class MuptilayerPerceptron:
         self.grad_t[-1] = self.grad_h[-1].T @ self.hidden[-2]
         self.grad_b[-1] = self.grad_h[-1]
         for i in range(self.layer_num - 2, 0, -1):
-            self.grad_h[i] = self.grad_h[i+1] @ self.thetas[i+1]
-            self.grad_t[i+1] = self.grad_h[i+1].T @ self.hidden[i+1]
-            self.grad_b[i+1] = self.grad_h[i+1]
+            self.grad_h[i] = self.grad_h[i + 1] @ self.thetas[i + 1]
+            self.grad_t[i + 1] = self.grad_h[i + 1].T @ self.hidden[i + 1]
+            self.grad_b[i + 1] = self.grad_h[i + 1]
         return self.grad_h, grad_b, grad_t
-
 
     def train(self, X: np.matrix, y: np.matrix, iteration: int):
         """
@@ -146,9 +204,12 @@ class MuptilayerPerceptron:
         """
         for i in range(iteration):
             print("Iteration: %s" % i)
-            self.backprop(X, y) # <- bug in backprop function
+            self.backprop(X, y)  # <- bug in backprop function
             for j in range(self.layer_num):
-                print("i: %d/%d j: %d/%d" %(i+1, iteration, j+1, self.layer_num))
+                print(
+                    "i: %d/%d j: %d/%d" %
+                    (i + 1, iteration, j + 1, self.layer_num)
+                )
                 self.biases[j] -= self.alpha * self.grad_b[j]
                 self.hidden[j] -= self.alpha * self.grad_h[j]
                 try:
@@ -156,11 +217,19 @@ class MuptilayerPerceptron:
                 except ValueError:
                     print("self.alpha: {}".format(self.alpha))
                     print("self.grad_t[{}]:\n{}".format(j, self.grad_t[j]))
-                    print("self.grad_t[{}] shape: {}".format(j, self.grad_t[j].shape))
+                    print(
+                        "self.grad_t[{}] shape: {}".format(
+                            j, self.grad_t[j].shape
+                        )
+                    )
                     print("self.thetas[{}]:\n{}".format(j, self.thetas[j]))
-                    print("self.grad_t[{}] shape: {}".format(j, self.thetas[j].shape))
+                    print(
+                        "self.grad_t[{}] shape: {}".format(
+                            j, self.thetas[j].shape
+                        )
+                    )
 
-    def predict(self, test_X: np.matrix)->np.matrix:
+    def predict(self, test_X: np.matrix) -> np.matrix:
         """
         Predict output given the input column vector using the trained weights.
         Params:
@@ -174,12 +243,16 @@ class MuptilayerPerceptron:
 
 if __name__ == "__main__":
 
-    mlp = MuptilayerPerceptron([2,5,7,2], 0.1, 0.1, 10)
-    X = np.matrix([[11,12,13,14,15,16,17,18,19,20],[10,9,8,7,6,5,4,3,2,1]]).T
-    y = np.matrix([1,1,1,0,0,1,0,1,1,0]).T
+    mlp = MuptilayerPerceptron([2, 5, 7, 2], 0.1, 0.1, 10)
+    X = np.matrix(
+        [
+            [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+            [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+        ]
+    ).T
+    y = np.matrix([1, 1, 1, 0, 0, 1, 0, 1, 1, 0]).T
     thetas, biases, hidden, grad_t, grad_b, grad_h = mlp._initialize()
 
     mlp._initialize()
 
     mlp.train(X, y, 10)
-
