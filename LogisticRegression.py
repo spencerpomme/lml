@@ -12,15 +12,8 @@ from time import time
 import numpy as np
 
 
-def flatten(nested):
-    return list(filter(lambda _: _,
-     (lambda _: ((yield from flatten(
-        e)) if isinstance(e,
-         Iterable) else (yield round(e, 6)) for e in _))(nested)))
-
-
 onezero = np.vectorize(lambda x: 0 if x < 0.5 else 1)
-safelog = np.vectorize(lambda x: x if x != 0 else 0.00000000001)
+safelog = np.vectorize(lambda x: x if abs(x) >= 0.00000000001 else 0.00000000001)
 sigmoid = lambda z: 1 / (1 + np.exp(-1 * z))
 ttsplit = lambda par, y, X: (y[:par], X[:par], y[par:], X[par:])
 average = lambda ls: sum([s[1] for s in ls]) / len(ls)
@@ -28,6 +21,12 @@ converged = lambda temp, theta, tol: abs(np.sum(temp - theta)) <= tol
 
 
 # Helper functions:
+def flatten(nested):
+    return list(filter(lambda _: _,
+        (lambda _: ((yield from flatten(e)) if isinstance(e,
+            Iterable) else (yield round(e, 6)) for e in _))(nested)))
+
+
 def traincsv2matrix(file: str) -> (np.matrix, np.matrix):
     """
     Retrieve training data from csv file.
@@ -152,7 +151,7 @@ def gradient(y: np.matrix, X: np.matrix, theta: np.matrix,
     hypo = sigmoid(X @ theta)
     L = np.matrix(np.identity(X.shape[1]))
     L[0, 0] = 0
-    # Here though, unlike line 169, we must preserve the structure of the gradient.
+    # Here we must preserve the structure of the gradient.
     return 1.0 / m * (X.T @ (hypo - y) + lamda * L @ theta)
 
 
@@ -228,8 +227,8 @@ def descent(y: np.matrix,
     theta = np.ones((X.shape[1], 1))
     loss = cost(y, X, theta, lamda)
     while not converged(temp, theta, tol) and i < maxiter:
-        if i // 100 == 0:
-            print("Iteration {0} | cost: {1: .6f}".format(i, loss))
+        # if i // 100 == 0 and i >= 100:
+        print("Iteration {0} | cost: {1: .6f}".format(i, loss))
         temp = theta
         theta = theta - alpha * gradient(y, X, theta, lamda)
         # theta = theta - alpha * para_gradient(y, X, theta)
@@ -417,13 +416,13 @@ if __name__ == "__main__":
     y, X = traincsv2matrix("diabetes_dataset.csv")
 
     # Simple training and testing the model:
-    """avge, best_theta = simple_split(y, X, 0.8, 0.00001, 0.0001, 1)"""
+    avge, best_theta = simple_split(y, X, 0.8, 0.0001, 0.00001, 0)
 
     # Using N-fold validation strategy:
-    """avge, best_theta = nfold_train(y, X, 7, 0.0001, 0.0001, 1)"""
+    """avge, best_theta = nfold_train(y, X, 7, 0.0001, 0.00001, 1)"""
 
     # Multiprocessing N-fold
-    avge, best_theta = multifold_train(y, X, 7, 0.0001, 0.0001, 50)
+    # avge, best_theta = multifold_train(y, X, 7, 0.0001, 0.00001, 0)
 
     # Predict y on non-labeled dataset:
     theta = best_theta[0]
