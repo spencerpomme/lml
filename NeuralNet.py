@@ -38,8 +38,8 @@ class MuptilayerPerceptron:
                 For example:
                 layers = [4, 3, 2]
                 Then, there would be:
-                𝜽1 := 3 x 4 matrix
-                𝜽2 := 2 x 3 matrix
+                w1 := 3 x 4 matrix
+                w2 := 2 x 3 matrix
                 b1 := 3 x 1 matrix (column vector)
                 b2 := 2 x 1 matrix (column vector)
                 This defines a neural network such that:
@@ -73,51 +73,99 @@ class MuptilayerPerceptron:
         Initialize the shape of neural network.
         Return:
             A tuple of 6 lists of np.matrix:
-        .weights: Weights between layers
+            weights: Weights between layers
             biases: Intercept two 
             hidden: Hidden layer intermediate calculation results. Shaped as:
                     [batch_size x feature_num]
             And initial gradients of them respectively.
         """
         weights = list(
-            map(np.matrix,
+            map(
+                np.matrix,
                 list(
-                    map(lambda ls: np.random.rand(*ls),
-                        list(zip(self.layers[1:], self.layers[:-1]))))))
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
+                        list(zip(self.layers[1:], self.layers[:-1]))
+                    )
+                )
+            )
+        )
         biases = list(
-            map(np.matrix,
+            map(
+                np.matrix,
                 list(
-                    map(lambda ls: np.random.rand(*ls),
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
-                            zip([self.batch_size] * (len(self.layers) - 1),
-                                self.layers[1:]))))))
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
         hidden = list(
-            map(np.matrix,
+            map(
+                np.matrix,
                 list(
-                    map(lambda ls: np.random.rand(*ls),
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
-                            zip([self.batch_size] * (len(self.layers) - 1),
-                                self.layers[1:]))))))
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
         grad_w = list(
-            map(np.matrix,
+            map(
+                np.matrix,
                 list(
-                    map(lambda ls: np.random.rand(*ls),
-                        list(zip(self.layers[1:], self.layers[:-1]))))))
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
+                        list(zip(self.layers[1:], self.layers[:-1]))
+                    )
+                )
+            )
+        )
         grad_b = list(
-            map(np.matrix,
+            map(
+                np.matrix,
                 list(
-                    map(lambda ls: np.random.rand(*ls),
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
-                            zip([self.batch_size] * (len(self.layers) - 1),
-                                self.layers[1:]))))))
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
         grad_h = list(
-            map(np.matrix,
+            map(
+                np.matrix,
                 list(
-                    map(lambda ls: np.random.rand(*ls),
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
-                            zip([self.batch_size] * (len(self.layers) - 1),
-                                self.layers[1:]))))))
+                            zip(
+                                [self.batch_size] * (len(self.layers) - 1),
+                                self.layers[1:]
+                            )
+                        )
+                    )
+                )
+            )
+        )
         return weights, biases, hidden, grad_w, grad_b, grad_h
 
     def forwardprop(self, X: np.matrix, activation) -> np.matrix:
@@ -133,8 +181,9 @@ class MuptilayerPerceptron:
         self.hidden[0] = activation(X @ self.weights[0].T + self.biases[0])
         for i in range(1, self.layer_num):
             self.hidden[i] = activation(
-                self.hidden[i - 1] @ self.weights[i].T + self.biases[i])
-        print("self.hidden[-1] ->\n", self.hidden[-1][:10])
+                self.hidden[i - 1] @ self.weights[i].T + self.biases[i]
+            )
+        # print("self.hidden ->\n", self.hidden)
         output = onezero(self.hidden[-1])
         return output
 
@@ -213,13 +262,13 @@ if __name__ == "__main__":
     # Read data:
     y_train, X_train = traincsv2matrix("diabetes_dataset.csv")
 
-    mlp = MuptilayerPerceptron([8, 8, 1], 0.1, 0.01, 768)
+    mlp = MuptilayerPerceptron([8, 4, 2, 1], 0.01, 0.01, 768)
 
     mlp._initialize()
-    pprint(mlp.weights)
+    pprint(mlp.hidden)
 
-    mlp.train(X_train, y_train, 1000000)
-    pprint(mlp.weights)
+    mlp.train(X_train, y_train, 20000)
+    pprint(mlp.hidden)
 
     # from sklearn.neural_network import MLPClassifier
     # clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
