@@ -61,11 +61,11 @@ class MuptilayerPerceptron:
         self.tol = tol
         self.batch_size = batch_size
         # Weights and gradients:
-        self.weights,\
-        self.biases,\
-        self.hidden,\
-        self.grad_w,\
-        self.grad_b,\
+        self.weights, \
+        self.biases, \
+        self.hidden, \
+        self.grad_w, \
+        self.grad_b, \
         self.grad_h = self._initialize()
 
     def _initialize(self) -> (list, list, list, list, list, list):
@@ -227,23 +227,24 @@ class MuptilayerPerceptron:
                 self.biases[j] -= self.alpha * self.grad_b[j]
                 # self.hidden[j] -= self.alpha * self.grad_h[j]
                 self.weights[j] -= self.alpha * self.grad_w[j]
-#                try:
-#                    self.weights[j] -= self.grad_w[j]
-#                except ValueError as e:
-#                    print(e)
-#                    print('\tgrad_w[{}] ->'.format(j), self.grad_w[j].shape)
-#                    print('\thidden[{}] ->'.format(j - 1),
-#                          self.hidden[j - 1].shape)
-#                else:
-#                    print('\tCorrect!')
-#                    print('\tgrad_w[{}] =>'.format(j), self.grad_w[j].shape)
-#                    print('\thidden[{}] ->'.format(j - 1),
-#                          self.hidden[j - 1].shape)
-#                finally:
-#                    print('\n-------------Inner {} iter end----------------\n'.
-#                          format(j))
-#            print('\n\n=================Outer {} iter end================\n\n'.
-#                  format(i))
+
+    #                try:
+    #                    self.weights[j] -= self.grad_w[j]
+    #                except ValueError as e:
+    #                    print(e)
+    #                    print('\tgrad_w[{}] ->'.format(j), self.grad_w[j].shape)
+    #                    print('\thidden[{}] ->'.format(j - 1),
+    #                          self.hidden[j - 1].shape)
+    #                else:
+    #                    print('\tCorrect!')
+    #                    print('\tgrad_w[{}] =>'.format(j), self.grad_w[j].shape)
+    #                    print('\thidden[{}] ->'.format(j - 1),
+    #                          self.hidden[j - 1].shape)
+    #                finally:
+    #                    print('\n-------------Inner {} iter end----------------\n'.
+    #                          format(j))
+    #            print('\n\n=================Outer {} iter end================\n\n'.
+    #                  format(i))
 
     def predict(self, test_X: np.matrix) -> np.matrix:
         """
@@ -258,7 +259,6 @@ class MuptilayerPerceptron:
 
 
 if __name__ == "__main__":
-
     # Read data:
     y_train, X_train = traincsv2matrix("diabetes_dataset.csv")
 
