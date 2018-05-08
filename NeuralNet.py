@@ -9,6 +9,8 @@ Created on Wed Mar 28 20:07:33 2018
 """
 
 import numpy as np
+from LogisticRegression import traincsv2matrix, onezero
+from pprint import pprint
 
 
 # Activation functions
@@ -22,7 +24,7 @@ class MuptilayerPerceptron:
     For simplicity, only use sigmoid function as activation function and mini batch
     gradient descent as optimization algorithm.
     Attributes:
-        thetas: A list of np.matrix, each represents a weight between two layers of a network.
+    .weights: A list of np.matrix, each represents a weight between two layers of a network.
         biases: A list of np.matrix, each represents a bias to be added to previous layer to 
                 calculate the next.
         hidden: Intermediate calculation result of hidden layer matrix, i.e. activations.
@@ -36,8 +38,8 @@ class MuptilayerPerceptron:
                 For example:
                 layers = [4, 3, 2]
                 Then, there would be:
-                𝜽1 := 3 x 4 matrix
-                𝜽2 := 2 x 3 matrix
+                w1 := 3 x 4 matrix
+                w2 := 2 x 3 matrix
                 b1 := 3 x 1 matrix (column vector)
                 b2 := 2 x 1 matrix (column vector)
                 This defines a neural network such that:
@@ -59,10 +61,10 @@ class MuptilayerPerceptron:
         self.tol = tol
         self.batch_size = batch_size
         # Weights and gradients:
-        self.thetas,\
+        self.weights,\
         self.biases,\
         self.hidden,\
-        self.grad_t,\
+        self.grad_w,\
         self.grad_b,\
         self.grad_h = self._initialize()
 
@@ -71,17 +73,20 @@ class MuptilayerPerceptron:
         Initialize the shape of neural network.
         Return:
             A tuple of 6 lists of np.matrix:
-            thetas: Weights between layers
+            weights: Weights between layers
             biases: Intercept two 
             hidden: Hidden layer intermediate calculation results. Shaped as:
                     [batch_size x feature_num]
             And initial gradients of them respectively.
         """
-        thetas = list(
+        weights = list(
             map(
                 np.matrix,
                 list(
-                    map(np.ones, list(zip(self.layers[1:], self.layers[:-1])))
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
+                        list(zip(self.layers[1:], self.layers[:-1]))
+                    )
                 )
             )
         )
@@ -90,7 +95,7 @@ class MuptilayerPerceptron:
                 np.matrix,
                 list(
                     map(
-                        np.ones,
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
                             zip(
                                 [self.batch_size] * (len(self.layers) - 1),
@@ -106,7 +111,7 @@ class MuptilayerPerceptron:
                 np.matrix,
                 list(
                     map(
-                        np.ones,
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
                             zip(
                                 [self.batch_size] * (len(self.layers) - 1),
@@ -118,11 +123,14 @@ class MuptilayerPerceptron:
             )
         )
 
-        grad_t = list(
+        grad_w = list(
             map(
                 np.matrix,
                 list(
-                    map(np.ones, list(zip(self.layers[1:], self.layers[:-1])))
+                    map(
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
+                        list(zip(self.layers[1:], self.layers[:-1]))
+                    )
                 )
             )
         )
@@ -131,7 +139,7 @@ class MuptilayerPerceptron:
                 np.matrix,
                 list(
                     map(
-                        np.ones,
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
                             zip(
                                 [self.batch_size] * (len(self.layers) - 1),
@@ -147,7 +155,7 @@ class MuptilayerPerceptron:
                 np.matrix,
                 list(
                     map(
-                        np.ones,
+                        lambda ls: np.random.rand(*ls) * 2 - 1,
                         list(
                             zip(
                                 [self.batch_size] * (len(self.layers) - 1),
@@ -158,7 +166,7 @@ class MuptilayerPerceptron:
                 )
             )
         )
-        return thetas, biases, hidden, grad_t, grad_b, grad_h
+        return weights, biases, hidden, grad_w, grad_b, grad_h
 
     def forwardprop(self, X: np.matrix, activation) -> np.matrix:
         """
@@ -170,12 +178,13 @@ class MuptilayerPerceptron:
             output: A matrix (as in np.matrix) representing n calculated ŷ.
                     The shape of output is [b_size x (number of output layer nodes)]
         """
-        self.hidden[0] = activation(X @ self.thetas[0].T + self.biases[0])
+        self.hidden[0] = activation(X @ self.weights[0].T + self.biases[0])
         for i in range(1, self.layer_num):
             self.hidden[i] = activation(
-                self.hidden[i - 1] @ self.thetas[i].T + self.biases[i]
+                self.hidden[i - 1] @ self.weights[i].T + self.biases[i]
             )
-        output = self.hidden[-1]
+        # print("self.hidden ->\n", self.hidden)
+        output = onezero(self.hidden[-1])
         return output
 
     def backprop(self, X: np.matrix, y: np.matrix):
@@ -187,15 +196,17 @@ class MuptilayerPerceptron:
             y: A batch of corresponding ground truth y
         """
         y_pred = self.forwardprop(X, sigmoid)
+        print("y ->\n", y[:10])
+        print("y_pred ->\n", y_pred[:10])
         loss = (y - y_pred).sum()
         self.grad_h[-1] = 2 * (y - y_pred)
-        self.grad_t[-1] = self.grad_h[-1].T @ self.hidden[-2]
+        self.grad_w[-1] = self.grad_h[-1].T @ self.hidden[-2]
         self.grad_b[-1] = self.grad_h[-1]
         for i in range(self.layer_num - 2, 0, -1):
-            self.grad_h[i] = self.grad_h[i + 1] @ self.thetas[i + 1]
-            self.grad_t[i + 1] = self.grad_h[i + 1].T @ self.hidden[i + 1]
+            self.grad_h[i] = self.grad_h[i + 1] @ self.weights[i + 1]
+            self.grad_w[i + 1] = self.grad_h[i + 1].T @ self.hidden[i]  # voila!
             self.grad_b[i + 1] = self.grad_h[i + 1]
-        return self.grad_h, grad_b, grad_t
+        return loss
 
     def train(self, X: np.matrix, y: np.matrix, iteration: int):
         """
@@ -203,14 +214,23 @@ class MuptilayerPerceptron:
         using gradient descent algorithm.
         """
         for i in range(iteration):
+<<<<<<< HEAD
             print("=====| Iteration: %s |=====" % i)
             self.backprop(X, y)  # <- bug in backprop function
+=======
+            loss = self.backprop(X, y)
+            if i % 10000 == 0 and i >= 100:
+                print("Iteration: %s | Loss: %s" % (i, loss))
+>>>>>>> 273eaec1622c9ce8ac60caf0f128721cbfe81774
             for j in range(self.layer_num):
-                print(
-                    "i: %d/%d j: %d/%d" %
-                    (i + 1, iteration, j + 1, self.layer_num)
-                )
+                # print('\tweights[{}] ->'.format(j), self.weights[j].shape)
+                # print('\tbiases[{}] ->'.format(j), self.biases[j].shape)
+                # print('\thidden[{}] ->'.format(j), self.hidden[j].shape)
+                # print('\tgrad_w[{}] ->'.format(j), self.grad_w[j].shape)
+                # print('\tgrad_b[{}] ->'.format(j), self.grad_b[j].shape)
+                # print('\tgrad_h[{}] ->'.format(j), self.grad_h[j].shape)
                 self.biases[j] -= self.alpha * self.grad_b[j]
+<<<<<<< HEAD
                 self.hidden[j] -= self.alpha * self.grad_h[j]
                 try:
                     self.thetas[j] -= self.alpha * self.grad_t[j]
@@ -228,6 +248,27 @@ class MuptilayerPerceptron:
                             j, self.thetas[j].shape
                         )
                     )
+=======
+                # self.hidden[j] -= self.alpha * self.grad_h[j]
+                self.weights[j] -= self.alpha * self.grad_w[j]
+#                try:
+#                    self.weights[j] -= self.grad_w[j]
+#                except ValueError as e:
+#                    print(e)
+#                    print('\tgrad_w[{}] ->'.format(j), self.grad_w[j].shape)
+#                    print('\thidden[{}] ->'.format(j - 1),
+#                          self.hidden[j - 1].shape)
+#                else:
+#                    print('\tCorrect!')
+#                    print('\tgrad_w[{}] =>'.format(j), self.grad_w[j].shape)
+#                    print('\thidden[{}] ->'.format(j - 1),
+#                          self.hidden[j - 1].shape)
+#                finally:
+#                    print('\n-------------Inner {} iter end----------------\n'.
+#                          format(j))
+#            print('\n\n=================Outer {} iter end================\n\n'.
+#                  format(i))
+>>>>>>> 273eaec1622c9ce8ac60caf0f128721cbfe81774
 
     def predict(self, test_X: np.matrix) -> np.matrix:
         """
@@ -243,16 +284,19 @@ class MuptilayerPerceptron:
 
 if __name__ == "__main__":
 
-    mlp = MuptilayerPerceptron([2, 5, 7, 2], 0.1, 0.1, 10)
-    X = np.matrix(
-        [
-            [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-            [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
-        ]
-    ).T
-    y = np.matrix([1, 1, 1, 0, 0, 1, 0, 1, 1, 0]).T
-    thetas, biases, hidden, grad_t, grad_b, grad_h = mlp._initialize()
+    # Read data:
+    y_train, X_train = traincsv2matrix("diabetes_dataset.csv")
+
+    mlp = MuptilayerPerceptron([8, 4, 2, 1], 0.01, 0.01, 768)
 
     mlp._initialize()
+    pprint(mlp.hidden)
 
-    mlp.train(X, y, 10)
+    mlp.train(X_train, y_train, 20000)
+    pprint(mlp.hidden)
+
+    # from sklearn.neural_network import MLPClassifier
+    # clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+    #     hidden_layer_sizes=(16, 8), random_state=1)
+    # clf.fit(X_train, np.ravel(y_train))
+    # print(clf.coefs_)
