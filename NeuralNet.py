@@ -203,7 +203,7 @@ class MuptilayerPerceptron:
         using gradient descent algorithm.
         """
         for i in range(iteration):
-            print("Iteration: %s" % i)
+            print("=====| Iteration: %s |=====" % i)
             self.backprop(X, y)  # <- bug in backprop function
             for j in range(self.layer_num):
                 print(
@@ -224,7 +224,7 @@ class MuptilayerPerceptron:
                     )
                     print("self.thetas[{}]:\n{}".format(j, self.thetas[j]))
                     print(
-                        "self.grad_t[{}] shape: {}".format(
+                        "self.thetas[{}] shape: {}".format(
                             j, self.thetas[j].shape
                         )
                     )
