@@ -2,3 +2,10 @@
 .vscode/launch.json
 .vscode/settings.json
 *.pyc
+*.stderr
+*.stdout
+*.914750
+*.lock
+*.pid
+*.913541
+.pyre_configuration
