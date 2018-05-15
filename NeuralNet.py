@@ -214,9 +214,14 @@ class MuptilayerPerceptron:
         using gradient descent algorithm.
         """
         for i in range(iteration):
+<<<<<<< HEAD
+            print("=====| Iteration: %s |=====" % i)
+            self.backprop(X, y)  # <- bug in backprop function
+=======
             loss = self.backprop(X, y)
             if i % 10000 == 0 and i >= 100:
                 print("Iteration: %s | Loss: %s" % (i, loss))
+>>>>>>> 273eaec1622c9ce8ac60caf0f128721cbfe81774
             for j in range(self.layer_num):
                 # print('\tweights[{}] ->'.format(j), self.weights[j].shape)
                 # print('\tbiases[{}] ->'.format(j), self.biases[j].shape)
@@ -225,8 +230,28 @@ class MuptilayerPerceptron:
                 # print('\tgrad_b[{}] ->'.format(j), self.grad_b[j].shape)
                 # print('\tgrad_h[{}] ->'.format(j), self.grad_h[j].shape)
                 self.biases[j] -= self.alpha * self.grad_b[j]
+<<<<<<< HEAD
+                self.hidden[j] -= self.alpha * self.grad_h[j]
+                try:
+                    self.thetas[j] -= self.alpha * self.grad_t[j]
+                except ValueError:
+                    print("self.alpha: {}".format(self.alpha))
+                    print("self.grad_t[{}]:\n{}".format(j, self.grad_t[j]))
+                    print(
+                        "self.grad_t[{}] shape: {}".format(
+                            j, self.grad_t[j].shape
+                        )
+                    )
+                    print("self.thetas[{}]:\n{}".format(j, self.thetas[j]))
+                    print(
+                        "self.thetas[{}] shape: {}".format(
+                            j, self.thetas[j].shape
+                        )
+                    )
+=======
                 # self.hidden[j] -= self.alpha * self.grad_h[j]
                 self.weights[j] -= self.alpha * self.grad_w[j]
+<<<<<<< HEAD
 
     #                try:
     #                    self.weights[j] -= self.grad_w[j]
@@ -245,6 +270,26 @@ class MuptilayerPerceptron:
     #                          format(j))
     #            print('\n\n=================Outer {} iter end================\n\n'.
     #                  format(i))
+=======
+#                try:
+#                    self.weights[j] -= self.grad_w[j]
+#                except ValueError as e:
+#                    print(e)
+#                    print('\tgrad_w[{}] ->'.format(j), self.grad_w[j].shape)
+#                    print('\thidden[{}] ->'.format(j - 1),
+#                          self.hidden[j - 1].shape)
+#                else:
+#                    print('\tCorrect!')
+#                    print('\tgrad_w[{}] =>'.format(j), self.grad_w[j].shape)
+#                    print('\thidden[{}] ->'.format(j - 1),
+#                          self.hidden[j - 1].shape)
+#                finally:
+#                    print('\n-------------Inner {} iter end----------------\n'.
+#                          format(j))
+#            print('\n\n=================Outer {} iter end================\n\n'.
+#                  format(i))
+>>>>>>> 273eaec1622c9ce8ac60caf0f128721cbfe81774
+>>>>>>> 4f0e4f1b6f9e6c11c28f7cf0d45c2573cad48284
 
     def predict(self, test_X: np.matrix) -> np.matrix:
         """
