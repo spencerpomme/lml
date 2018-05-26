@@ -5,3 +5,10 @@
 .vscode/settings.json
 >>>>>>> 273eaec1622c9ce8ac60caf0f128721cbfe81774
 *.pyc
+*.stderr
+*.stdout
+*.914750
+*.lock
+*.pid
+*.913541
+.pyre_configuration
