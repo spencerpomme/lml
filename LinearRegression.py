@@ -99,3 +99,8 @@ if __name__ == "__main__":
     print(sum(errors) / 100)
     # print(type(w_hypoth.tolist()[0][0]))
     # print(w_hypoth.tolist()[1][0])
+<<<<<<< HEAD
+=======
+
+    
+>>>>>>> db33e78af46068aa5df26b196a9a188072092bca
