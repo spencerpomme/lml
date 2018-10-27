@@ -1,0 +1,8 @@
+2018-05-12 11:59:25,397 INFO Binary found at /anaconda3/envs/tensorflow/bin/pyre.bin
+2018-05-12 11:59:25,397 DEBUG Trying with: `/anaconda3/envs/tensorflow/lib/python3.6/site-packages/pyre_check/pyre_check/typeshed/stdlib/`
+2018-05-12 11:59:25,398 DEBUG Trying with: `/anaconda3/envs/tensorflow/lib/python3.6/site-packages/pyre_check/typeshed/stdlib/`
+2018-05-12 11:59:25,398 DEBUG Trying with: `/anaconda3/envs/tensorflow/lib/python3.6/pyre_check/typeshed/stdlib/`
+2018-05-12 11:59:25,398 DEBUG Trying with: `/anaconda3/envs/tensorflow/lib/pyre_check/typeshed/stdlib/`
+2018-05-12 11:59:25,399 INFO Successfully initialized pyre! You can view the configuration at `/Users/spencer/GITHUB/lml/.pyre_configuration`.
+2018-05-12 12:03:45,803 ERROR A .pyre_configuration already exists at /Users/spencer/GITHUB/lml/.pyre_configuration.
+
